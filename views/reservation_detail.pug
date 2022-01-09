@@ -1,0 +1,17 @@
+extends layout
+
+block content
+
+    h1 Бронь: #{reservation.name}
+
+    div(style='margin-left:20px;margin-top:20px')
+        h4 Забронировано с #{reservation.start_time_formatted} по #{reservation.end_time_formatted}
+
+        h4
+            a(href=reservation_table.url) Стол № #{reservation_table.position}
+            dl
+                a(href=table_waiter.url) Официант: #{table_waiter.name}
+
+        h4 Посетитель:
+            a(href=reservation_visitor.url) #{reservation_visitor.name}
+            dl Номер телефона: #{reservation_visitor.number}

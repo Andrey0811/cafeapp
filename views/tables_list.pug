@@ -1,0 +1,17 @@
+extends layout
+
+block content
+    h1= title
+
+    ul
+        each table in tables_list
+            li
+                a(href=table.url) Столик № #{table.position} со статусом:
+                if table.status === 'Available'
+                    span.text-success #{table.status}
+                else if table.status === 'Maintenance'
+                    span.text-danger #{table.status}
+                else
+                    span.text-warning #{table.status}
+        else
+            li There are no book copies in this library.

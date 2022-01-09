@@ -1,0 +1,26 @@
+{
+  "name": "cafeapp",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "devstart": "nodemon ./bin/www"
+  },
+  "dependencies": {
+    "async": "^3.2.2",
+    "cookie-parser": "~1.4.4",
+    "cors": "^2.8.5",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "moment": "^2.29.1",
+    "mongoose": "^6.1.5",
+    "morgan": "~1.9.1",
+    "npm": "^8.3.0",
+    "pug": "^3.0.2",
+    "start": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}

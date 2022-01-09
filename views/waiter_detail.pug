@@ -1,0 +1,27 @@
+extends layout
+
+block content
+    h1 Официант: #{waiter.name}
+
+    p Стаж:
+        a(href=waiter.url) #{waiter.employment}
+
+    div(style='margin-left:20px;margin-top:20px')
+        h4 Столики
+
+        each val in tables
+            hr
+            if val.status == 'Available'
+                p.text-success #{val.status}
+            else if val.status == 'Maintenance'
+                p.text-danger #{val.status}
+            else
+                p.text-warning #{val.status}
+            p #[strong Столик № ] #{val.position}
+            if val.status != 'Available'
+                p #[strong Занят до: ] #{val.end_time_reserv}
+            p #[strong Id: ]
+                a(href=val.url) #{val._id}
+
+        else
+            p Нет столиков у официанта
