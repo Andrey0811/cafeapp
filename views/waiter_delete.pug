@@ -1,0 +1,27 @@
+extends layout
+
+block content
+
+    h1= title
+
+    if tables.length
+
+        p #[strong Удалите или измените следующие столики, прежде чем пытаться удалить этотого официанта.]
+
+        div(style='margin-left:20px;margin-top:20px')
+
+            h4 Столики
+
+            dl
+            each table in tables
+                dt Столик №
+                    a(href=table.url) #{table.position}
+
+    else
+        p Вы действительно хотите удалить этого официанта?
+
+        form(method='POST' action='')
+            div.form-group
+                input#id.form-control(type='hidden',name='id', required='true', value=waiter._id )
+
+            button.btn.btn-primary(type='submit') Удалить

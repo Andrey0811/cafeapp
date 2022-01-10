@@ -1,0 +1,21 @@
+extends layout
+
+block content
+    h1=title
+
+    form(method='POST' action='')
+        div.form-group
+            label(for='name') Имя:
+            input#name.form-control(type='text', placeholder='Иван' name='name' value=(undefined===waiter ? '' : waiter.name))
+
+        if isCreate
+            div.form-group
+                label(for='date_employment') Дата приема на работу:
+                input#date_employment.form-control(type='date' name='date_employment' value=(undefined === waiter ? Date.now() : waiter.date_employment))
+
+        button.btn.btn-primary(type='submit') Сохранить
+
+    if errors
+        ul
+            for error in errors
+                li!= error.msg

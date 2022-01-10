@@ -1,0 +1,42 @@
+extends layout
+
+block content
+    h1= title
+
+    form(method='POST' action='')
+        div.form-group
+            label(for='id_visitor') Посетитель:
+            select#id_visitor.form-control(type='select', placeholder='Выберите посетителя' name='id_visitor' required='true')
+                - waiter.sort(function(a, b) {let textA = a.name.toUpperCase(); let textB = b.name.toUpperCase(); return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;});
+                for val in visitor
+                    if table
+                        option(value=val._id selected=(val._id.toString()===reservation.id_visitor._id.toString() ? 'selected' : false) ) #{val.name}
+                    else
+                        option(value=val._id) #{val.name}
+        div.form-group
+            label(for='id_table') Столик:
+            select#id_table.form-control(type='select', placeholder='Выберите столик' name='id_table' required='true')
+                - waiter.sort(function(a, b) {let textA = a.name.toUpperCase(); let textB = b.name.toUpperCase(); return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;});
+                for val in table
+                    if table
+                        option(value=val._id selected=(val._id.toString() === reservation.id_table._id.toString() ? 'selected' : false) ) #{val.name}
+                    else
+                        option(value=val._id) #{val.name}
+        div.form-group
+            label(for='count_peoples') Кол-во человек: + попробовать ограничить кол-во человек на выбор по количеству возможных человек за столиком
+            input#count_peoples.form-control(type='text', placeholder='2' name='count_peoples' value=(undefined===reservation ? '' : reservation.count_peoples))
+
+        div.form-group
+            label(for='start_time') Дата приема на работу:
+            input#start_time.form-control(type='date' name='start_time' value=(undefined===reservation ? Data.now() : reservation.start_time))
+
+        div.form-group
+            label(for='end_time') Дата приема на работу:
+            input#end_time.form-control(type='date' name='end_time' value=(undefined===reservation ? null : reservation.end_time))
+
+        button.btn.btn-primary(type='submit') Сохранить
+
+    if errors
+        ul
+            for error in errors
+                li!= error.msg

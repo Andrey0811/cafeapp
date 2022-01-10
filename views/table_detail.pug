@@ -1,0 +1,27 @@
+extends layout
+
+block content
+    h1= title + table.position
+
+    p Официант:
+        a(href=waiter.url) #{waiter.name}
+
+    div(style='margin-left:20px;margin-top:20px')
+        h4 Резервы:
+
+        each val in reservations
+            hr
+            if val.end_time < Date.now()
+                p.text-danger
+                a(href=val.url) Прошедший резерв на #{val.start_time_formatted}
+            else
+                p.text-success
+                a(href=val.url) Текущий резерв на #{val.start_time_formatted}
+        else
+            p Нет резервов
+
+    hr
+    p
+        a(href=waiter.url + '/delete') Удалить столик
+    p
+        a(href=waiter.url + '/update') Изменить столик

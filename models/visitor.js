@@ -4,7 +4,7 @@ let Schema = bookshelf.Schema;
 
 let VisitorSchema = new Schema({
     name: {type: String, required: true},
-    number: Number
+    email: {type: String, required: true}
 });
 
 VisitorSchema.virtual('url').get( function () {

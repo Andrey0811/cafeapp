@@ -2,71 +2,210 @@ let Waiter = require('../models/waiter');
 let Table = require('../models/table');
 
 let async = require('async');
+const validator = require('express-validator');
+const {body} = require("express-validator");
 
-// Показать список всех waiters.
-exports.waiter_list = function(req, res) {
+const notFoundMsg = 'Официант не найден'
+const listWaiters = 'Список официантов'
+const waiterMsg = 'Официант '
+const createWaiterMsg = 'Добавить официанта'
+const checkErrorMsg = 'Требуется имя официанта'
+const deleteWaiterMsg = 'Удаление официанта'
+const updateWaiterMsg = 'Изменить официанта'
+
+const deleteForm = 'waiter_delete'
+const listForm = 'waiter_list'
+const detailForm = 'waiter_detail'
+const createForm = 'waiter_form'
+
+exports.waiter_list = function(req, res, next) {
     Waiter.find()
         .sort('name')
-        .populate('name')
         .exec(function (err, list_waiters) {
             if (err) { return next(err); }
-            // Successful, so render
-            res.render('waiter_list', { title: 'Список официантов', waiters_list: list_waiters });
+            res.render(listForm, { title: listWaiters, waiters_list: list_waiters });
         });
 };
 
-// Показать подробную страницу для данного waiter.
-exports.waiter_detail = function(req, res) {
+exports.waiter_detail = function(req, res, next) {
     async.parallel({
         waiter: function(callback) {
             Waiter.findById(req.params.id)
                 .exec(callback);
         },
-        tables: function(callback) {
+        tables: function(result, callback) {
             Table.find({ 'id_waiter': req.params.id })
                 .sort('position')
                 .exec(callback);
         },
     }, function(err, results) {
-        if (err) {
-            return next(err);
+        if (err) { return next(err); }
+        if (results.waiter == null) {
+            catchError(notFoundMsg, next)
         }
-        // if (results.book==null) { // No results.
-        //     let err = new Error('Book not found');
-        //     err.status = 404;
-        //     return next(err);
-        // }
-        // Successful, so render.
-        res.render('waiter_detail', { title: results.waiter.name, waiter: results.waiter, tables: results.tables } );
+        res.render(detailForm, {
+            title: waiterMsg,
+            waiter: results.waiter,
+            tables: results.tables
+        });
     });
 };
 
-// Показать форму создания waiter по запросу GET.
-exports.waiter_create_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: Waiter create GET');
+exports.waiter_create_get = function(req, res, next) {
+    res.render(createForm, { title: createWaiterMsg, isCreate: true });
 };
 
-// Создать waiter по запросу POST.
-exports.waiter_create_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: Waiter create POST');
+exports.waiter_create_post = [
+    validator.body('name', checkErrorMsg).trim().isLength({ min: 3 }),
+
+    (req, res, next) => {
+        const errors = validator.validationResult(req);
+        let waiter = new Waiter({
+            name: req.body.name,
+            date_employment: req.date_employment
+        });
+
+        if (!errors.isEmpty()) {
+            res.render(createForm, {
+                title: createWaiterMsg,
+                waiter: waiter,
+                errors: errors.array(),
+                isCreate: true
+            });
+            return;
+        }
+        else {
+            async.parallel(
+                {
+                    waiter: function (callback) {
+                        Waiter.findOne({
+                            'name': req.body.name,
+                            'date_employment': req.date_employment
+                        })
+                            .exec(callback);
+                    }
+                }, function (err, result) {
+                    if (err) { return next(err); }
+
+                    if (result.waiter) {
+                        res.redirect(result.waiter.url);
+                    } else {
+                        result.save(function (err) {
+                            if (err) { return next(err); }
+                            res.redirect(result.waiter.url);
+                        });
+                    }
+                })
+        }
+    }
+];
+
+exports.waiter_delete_get = function(req, res, next) {
+    async.parallel({
+        waiter: function(callback) {
+            Waiter.findById(req.params.id)
+                .exec(callback);
+        },
+        tables: function(result, callback) {
+            Table.find({ 'id_waiter': req.params.id })
+                .sort('position')
+                .exec(callback);
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        if (results.waiter == null) {
+            res.redirect('/catalog/waiters');
+        }
+
+        res.render(deleteForm, {
+            title: deleteWaiterMsg,
+            waiter: results.waiter,
+            tables: results.tables
+        });
+    });
 };
 
-// Показать форму удаления waiter по запросу GET.
-exports.waiter_delete_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: Waiter delete GET');
+exports.waiter_delete_post = function(req, res, next) {
+    async.parallel({
+        waiter: function(callback) {
+            Waiter.findById(req.params.id)
+                .exec(callback);
+        },
+        tables: function(result, callback) {
+            Table.find({ 'id_waiter': req.params.id })
+                .sort('position')
+                .exec(callback);
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        if (results.tables.length > 0) {
+            //может сообщение вывести о том или овую страницу о том что попутно удаляятся еще и столики
+            res.render(deleteForm, {
+                title: deleteWaiterMsg,
+                waiter: results.waiter,
+                tables: results.tables
+            });
+            return;
+        }
+        else {
+            Waiter.findByIdAndRemove(req.body.id, function deleteWaiter(err) {
+                if (err) { return next(err); }
+                res.redirect('/catalog/waiters');
+            });
+
+        }
+    });
 };
 
-// Удалить waiter по запросу POST.
-exports.waiter_delete_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: Waiter delete POST');
+exports.waiter_update_get = function(req, res, next) {
+    Waiter.findById(req.params.id, function(err, waiter) {
+        if (err) { return next(err); }
+        if (waiter == null) {
+            catchError(notFoundMsg, next)
+        }
+        res.render(createForm, {
+            title: updateWaiterMsg,
+            waiter: waiter,
+            isCreate: false
+        });
+    });
 };
 
-// Показать форму обновления waiter по запросу GET.
-exports.waiter_update_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: Waiter update GET');
-};
+exports.waiter_update_post = [
 
-// Обновить waiter по запросу POST.
-exports.waiter_update_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: Waiter update POST');
-};
+    body('name', checkErrorMsg).trim().isLength({ min: 3 }).escape(),
+
+    (req, res, next) => {
+
+        const errors = validator.validationResult(req);
+        let waiter = new Waiter({
+            _id: req.params.id,
+            name: req.body.name,
+            date_employment: req.date_employment
+        });
+
+        if (!errors.isEmpty()) {
+            res.render(createForm, {
+                title: updateWaiterMsg,
+                waiter: waiter,
+                errors: errors.array(),
+                isCreate: true
+            });
+            return;
+        }
+        else {
+            Waiter.findByIdAndUpdate(req.params.id, waiter, {},
+                function (err,waiter) {
+                    if (err) { return next(err); }
+                    res.redirect(waiter.url);
+                }
+            );
+        }
+    }
+];
+
+function catchError(msg, next) {
+    let err = new Error(msg);
+    err.status = 404;
+    return next(err);
+}

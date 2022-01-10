@@ -1,0 +1,37 @@
+extends layout
+
+block content
+    h1= title
+
+    form(method='POST' action='')
+        div.form-group
+            label(for='position') Позиция:
+            input#position.form-control(type='text', placeholder='Позиция столика' name='position' required='true' value=(undefined===table ? '' : table.position) )
+        div.form-group
+            label(for='id_waiter') Официант:
+            select#id_waiter.form-control(type='select', placeholder='Выберите официанта>' name='id_waiter' required='true')
+                - waiter.sort(function(a, b) {let textA = a.name.toUpperCase(); let textB = b.name.toUpperCase(); return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;});
+                for val in waiter
+                    if table
+                        option(value=val._id selected=(val._id.toString()===table.id_waiter._id.toString() ? 'selected' : false) ) #{val.name}
+                    else
+                        option(value=val._id) #{val.name}
+        div.form-group
+            label(for='count_peoples') Вместимость:
+            input#count_peoples.form-control(type='text', placeholder='2' name='count_peoples' value=(undefined===table ? '' : table.count_peoples) required='true')
+        if !isCreate
+            div.form-group
+                label(for='status') Статус:
+                select#status.form-control(type='select', placeholder='Статус' name='status')
+                - statusTable.sort(function(a, b) {let textA = a.toUpperCase(); let textB = b.toUpperCase(); return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;});
+                    for val in statusTable
+                        if table
+                            option(value=val selected=(val.toString() === table.stauts.toString() ? 'selected' : false) ) #{val}
+                        else
+                            option(value=val) #{val}
+        button.btn.btn-primary(type='submit') Сохранить
+
+    if errors
+        ul
+            for error in errors
+                li!= error.msg

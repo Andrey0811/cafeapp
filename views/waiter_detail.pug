@@ -1,7 +1,7 @@
 extends layout
 
 block content
-    h1 Официант: #{waiter.name}
+    h1= title + waiter.name
 
     p Стаж:
         a(href=waiter.url) #{waiter.employment}
@@ -24,4 +24,10 @@ block content
                 a(href=val.url) #{val._id}
 
         else
-            p Нет столиков у официанта
+            p Нет столиков в распоряжении.
+
+    hr
+    p
+        a(href=waiter.url + '/delete') Удалить официанта
+    p
+        a(href=waiter.url + '/update') Изменить официанта

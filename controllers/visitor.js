@@ -1,48 +1,200 @@
 let Visitor = require('../models/visitor');
+let Reservation = require("../models/reservation");
 
-// Показать список всех visitors.
-exports.visitor_list = function(req, res) {
+let async = require('async');
+const validator = require('express-validator');
+
+const notFoundMsg = 'Посетитель не найден'
+const listVisitors = 'Список посетителей'
+const visitorMsg = 'Посетитель '
+const createVisitorMsg = 'Добавить посетителя'
+const checkErrorNameMsg = 'Требуется имя посетителя'
+const checkErrorEmailMsg = 'Требуется почта посетителя'
+const deleteVisitorMsg = 'Удаление посетителя'
+const updateVisitorMsg = 'Изменить посетителя'
+
+const deleteForm = 'visitor_delete'
+const listForm = 'visitor_list'
+const detailForm = 'visitor_detail'
+const createForm = 'visitor_form'
+
+exports.visitor_list = function(req, res, next) {
     Visitor.find()
         .sort('name')
-        .populate('name')
         .exec(function (err, list_visitors) {
             if (err) { return next(err); }
-            // Successful, so render
-            res.render('visitors_list', { title: 'Список посетителей', visitors_list: list_visitors });
+            res.render(listForm, {
+                title: listVisitors,
+                visitors_list: list_visitors
+            });
         });
 };
 
-// Показать подробную страницу для данного visitor.
-exports.visitor_detail = function(req, res) {
-    res.send('NOT IMPLEMENTED: Visitor detail: ' + req.params.id);
+exports.visitor_detail = function(req, res, next) {
+    async.parallel({
+        visitor: function(callback) {
+            Visitor.findById(req.params.id)
+                .exec(callback);
+        },
+        reservations: function(callback) {
+            Reservation.find({ 'id_visitor': req.params.id })
+                .exec(callback);
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        if (results.visitor == null) {
+            catchError(notFoundMsg, next)
+        }
+        res.render(detailForm, {
+            title: visitorMsg,
+            visitor: results.visitor,
+            reservations: results.reservations
+        });
+    });
 };
 
-// Показать форму создания visitor по запросу GET.
-exports.visitor_create_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: Visitor create GET');
+exports.visitor_create_get = function(req, res, next) {
+    res.render(createForm, { title: createVisitorMsg});
 };
 
-// Создать visitor по запросу POST.
-exports.visitor_create_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: Visitor create POST');
+exports.visitor_create_post = [
+    validator.body('name', checkErrorNameMsg).trim().isLength({ min: 3 }),
+    validator.body('email', checkErrorEmailMsg).trim().contains('@'),
+
+    (req, res, next) => {
+        const errors = validator.validationResult(req);
+        let visitor = new Visitor({
+            name: req.body.name,
+            email: req.body.email
+        });
+
+        if (!errors.isEmpty()) {
+            res.render(createForm, {
+                title: createVisitorMsg,
+                visitor: visitor,
+                errors: errors.array()
+            });
+            return;
+        }
+        else {
+            async.parallel(
+                {
+                    visitor: function (callback) {
+                        Visitor.findOne({
+                            'name': req.body.name,
+                            'email': req.body.email
+                        }).exec(callback);
+                    }
+                }, function (err, result) {
+                    if (err) { return next(err); }
+
+                    if (result.visitor) {
+                        res.redirect(result.visitor.url);
+                    } else {
+                        result.save(function (err) {
+                            if (err) { return next(err); }
+                            res.redirect(result.visitor.url);
+                        });
+                    }
+                })
+        }
+    }
+];
+
+exports.visitor_delete_get = function(req, res, next) {
+    async.parallel({
+        visitor: function(callback) {
+            Visitor.findById(req.params.id)
+                .exec(callback);
+        },
+        reservations: function(result, callback) {
+            Reservation.find({ 'id_visitor': req.params.id })
+                .sort('start_time')
+                .exec(callback);
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        if (results.visitor == null) {
+            res.redirect('/catalog/visitors');
+        }
+
+        res.render(deleteForm, {
+            title: deleteVisitorMsg,
+            visitor: results.visitor,
+            reservations: results.reservations
+        });
+    });
 };
 
-// Показать форму удаления visitor по запросу GET.
-exports.visitor_delete_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: Visitor delete GET');
+exports.visitor_delete_post = function(req, res, next) {
+    async.parallel({
+        visitor: function(callback) {
+            Visitor.findById(req.params.id)
+                .exec(callback);
+        },
+        reservations: function(result, callback) {
+            Reservation.find({ 'id_visitor': req.params.id })
+                .sort('start_time')
+                .exec(callback);
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        Reservation.findOneAndRemove({ 'id_visitor': req.params.id });
+        Visitor.findByIdAndRemove(req.body.id, function deleteVisitor(err) {
+            if (err) { return next(err); }
+            res.redirect('/catalog/visitors');
+        });
+
+    });
 };
 
-// Удалить visitor по запросу POST.
-exports.visitor_delete_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: Visitor delete POST');
+exports.visitor_update_get = function(req, res, next) {
+    Visitor.findById(req.params.id, function(err, visitor) {
+        if (err) { return next(err); }
+        if (visitor == null) {
+            catchError(notFoundMsg, next)
+        }
+        res.render(createForm, {
+            title: updateVisitorMsg,
+            visitor: visitor
+        });
+    });
 };
 
-// Показать форму обновления visitor по запросу GET.
-exports.visitor_update_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: Visitor update GET');
-};
+exports.visitor_update_post = [
+    validator.body('name', checkErrorNameMsg).trim().isLength({ min: 3 }),
+    validator.body('email', checkErrorEmailMsg).trim().contains('@'),
 
-// Обновить visitor по запросу POST.
-exports.visitor_update_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: Visitor update POST');
-};
+    (req, res, next) => {
+
+        const errors = validator.validationResult(req);
+        let visitor = new Visitor({
+            _id: req.params.id,
+            name: req.body.name,
+            email: req.email
+        });
+
+        if (!errors.isEmpty()) {
+            res.render(createForm, {
+                title: updateVisitorMsg,
+                visitor: visitor,
+                errors: errors.array()
+            });
+            return;
+        }
+        else {
+            Visitor.findByIdAndUpdate(req.params.id, visitor, {},
+                function (err, visitor) {
+                    if (err) { return next(err); }
+                    res.redirect(visitor.url);
+                }
+            );
+        }
+    }
+];
+
+function catchError(msg, next) {
+    let err = new Error(msg);
+    err.status = 404;
+    return next(err);
+}
