@@ -97,7 +97,7 @@ function tableCreate(position, count, waiter, status, cb) {
 function visitorCreate(name, number, cb) {
     let detail = {
         name: name,
-        number: number
+        email: number
     }
     if (number !== false)
         detail.number = number
@@ -150,13 +150,13 @@ function createTable(cb) {
 function createVisitor(cb) {
     async.parallel([
             function (callback) {
-                visitorCreate("Andrey", "9542345497", callback);
+                visitorCreate("Andrey", "0811andrey0811@mail.ru", callback);
             },
             function (callback) {
                 visitorCreate("Pasha", false, callback)
             },
             function (callback) {
-                visitorCreate("Dima", "9475091238", callback)
+                visitorCreate("Dima", "test@mail.ru", callback)
             }
         ],
         cb);

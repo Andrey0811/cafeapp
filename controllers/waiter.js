@@ -28,16 +28,16 @@ exports.waiter_list = function(req, res, next) {
 };
 
 exports.waiter_detail = function(req, res, next) {
-    async.parallel({
+    async.auto({
         waiter: function(callback) {
             Waiter.findById(req.params.id)
                 .exec(callback);
         },
-        tables: function(result, callback) {
+        tables: ['waiter', function(result, callback) {
             Table.find({ 'id_waiter': req.params.id })
                 .sort('position')
                 .exec(callback);
-        },
+        }],
     }, function(err, results) {
         if (err) { return next(err); }
         if (results.waiter == null) {
@@ -62,7 +62,7 @@ exports.waiter_create_post = [
         const errors = validator.validationResult(req);
         let waiter = new Waiter({
             name: req.body.name,
-            date_employment: req.date_employment
+            date_employment: req.body.date_employment
         });
 
         if (!errors.isEmpty()) {
@@ -90,9 +90,9 @@ exports.waiter_create_post = [
                     if (result.waiter) {
                         res.redirect(result.waiter.url);
                     } else {
-                        result.save(function (err) {
+                        waiter.save(function (err) {
                             if (err) { return next(err); }
-                            res.redirect(result.waiter.url);
+                            res.redirect(waiter.url);
                         });
                     }
                 })
@@ -101,16 +101,16 @@ exports.waiter_create_post = [
 ];
 
 exports.waiter_delete_get = function(req, res, next) {
-    async.parallel({
+    async.auto({
         waiter: function(callback) {
             Waiter.findById(req.params.id)
                 .exec(callback);
         },
-        tables: function(result, callback) {
+        tables: ['waiter', function(result, callback) {
             Table.find({ 'id_waiter': req.params.id })
                 .sort('position')
                 .exec(callback);
-        },
+        }],
     }, function(err, results) {
         if (err) { return next(err); }
         if (results.waiter == null) {
@@ -126,16 +126,16 @@ exports.waiter_delete_get = function(req, res, next) {
 };
 
 exports.waiter_delete_post = function(req, res, next) {
-    async.parallel({
+    async.auto({
         waiter: function(callback) {
             Waiter.findById(req.params.id)
                 .exec(callback);
         },
-        tables: function(result, callback) {
+        tables: ['waiter', function(result, callback) {
             Table.find({ 'id_waiter': req.params.id })
                 .sort('position')
                 .exec(callback);
-        },
+        }],
     }, function(err, results) {
         if (err) { return next(err); }
         if (results.tables.length > 0) {

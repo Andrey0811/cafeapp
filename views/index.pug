@@ -2,7 +2,7 @@ extends layout
 
 block content
   h1= title
-  p Добро пожаловать в кофейню Топливо.
+  p Добро пожаловать в кофейню.
 
   h1
 
@@ -13,7 +13,6 @@ block content
 
     ul
       li #[strong Кол-во броней:] !{data.reservation_count}
-      li #[strong Кол-во действующих броней:] !{data.table_available_count}
       li #[strong Кол-во официантов:] !{data.waiter_count}
       li #[strong Кол-во столиков:] !{data.table_count}
       li #[strong Общее кол-во посетителей:] !{data.visitor_count}

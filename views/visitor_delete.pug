@@ -4,24 +4,21 @@ block content
 
     h1= title
 
-    if reservations.length
+    p #[strong Следующие брони будут удалены вместе с посетителем]
 
-        p #[strong Следующие брони будут удалены вместе с посетителем]
+    div(style='margin-left:20px;margin-top:20px')
 
-        div(style='margin-left:20px;margin-top:20px')
+        h4 Брони
 
-            h4 Брони
+        dl
+        each reservation in reservations
+            dt Бронь на
+                a(href=reservation.url) #{reservation.start_time_formatted}
 
-            dl
-            each reservation in reservations
-                dt Бронь на
-                    a(href=reservation.url) #{reservation.start_time_formatted}
+    p Вы действительно хотите удалить этого посетителя?
 
-    else
-        p Вы действительно хотите удалить этого посетителя?
+    form(method='POST' action='')
+        div.form-group
+            input#id.form-control(type='hidden',name='id', required='true', value=visitor._id )
 
-        form(method='POST' action='')
-            div.form-group
-                input#id.form-control(type='hidden',name='id', required='true', value=visitor._id )
-
-            button.btn.btn-primary(type='submit') Удалить
+        button.btn.btn-primary(type='submit') Удалить

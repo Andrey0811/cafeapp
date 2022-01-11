@@ -11,7 +11,7 @@ block content
 
         each val in reservations
             hr
-            if val.end_time < Date.now()
+            if val.start_time < Date.now()
                 p.text-danger
                 a(href=val.url) Прошедший резерв на #{val.start_time_formatted}
             else
@@ -22,6 +22,6 @@ block content
 
     hr
     p
-        a(href=waiter.url + '/delete') Удалить столик
+        a(href=table.url + '/delete') Удалить столик
     p
-        a(href=waiter.url + '/update') Изменить столик
+        a(href=table.url + '/update') Изменить столик

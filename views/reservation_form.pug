@@ -2,37 +2,42 @@ extends layout
 
 block content
     h1= title
-
     form(method='POST' action='')
         div.form-group
             label(for='id_visitor') Посетитель:
             select#id_visitor.form-control(type='select', placeholder='Выберите посетителя' name='id_visitor' required='true')
-                - waiter.sort(function(a, b) {let textA = a.name.toUpperCase(); let textB = b.name.toUpperCase(); return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;});
+                - visitor.sort(function(a, b) {let textA = a.name.toUpperCase(); let textB = b.name.toUpperCase(); return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;});
                 for val in visitor
-                    if table
+                    if reservation
                         option(value=val._id selected=(val._id.toString()===reservation.id_visitor._id.toString() ? 'selected' : false) ) #{val.name}
                     else
                         option(value=val._id) #{val.name}
         div.form-group
             label(for='id_table') Столик:
             select#id_table.form-control(type='select', placeholder='Выберите столик' name='id_table' required='true')
-                - waiter.sort(function(a, b) {let textA = a.name.toUpperCase(); let textB = b.name.toUpperCase(); return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;});
+                - table.sort(function(a, b) {let textA = a.position; let textB = b.position; return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;});
                 for val in table
-                    if table
-                        option(value=val._id selected=(val._id.toString() === reservation.id_table._id.toString() ? 'selected' : false) ) #{val.name}
+                    if reservation
+                        option(value=val._id selected=(val._id.toString() === reservation.id_table._id.toString() ? 'selected' : false) ) #{val.position}
                     else
-                        option(value=val._id) #{val.name}
+                        option(value=val._id) #{val.position}
         div.form-group
-            label(for='count_peoples') Кол-во человек: + попробовать ограничить кол-во человек на выбор по количеству возможных человек за столиком
-            input#count_peoples.form-control(type='text', placeholder='2' name='count_peoples' value=(undefined===reservation ? '' : reservation.count_peoples))
+            label(for='count_peoples') Кол-во человек:
+            input#count_peoples.form-control(type='number', placeholder='2' name='count_peoples' min='1' max='10' value=(undefined===reservation ? '' : reservation.count_peoples))
 
         div.form-group
-            label(for='start_time') Дата приема на работу:
-            input#start_time.form-control(type='date' name='start_time' value=(undefined===reservation ? Data.now() : reservation.start_time))
+            label(for='start_date') Дата брони:
+            input#start_date.form-control(type='date' name='start_date' value=(undefined===reservation ? null : reservation.start_date) required=true)
 
         div.form-group
-            label(for='end_time') Дата приема на работу:
-            input#end_time.form-control(type='date' name='end_time' value=(undefined===reservation ? null : reservation.end_time))
+            label(for='start_time') Время брони:
+            input#start_time.form-control(type='time' name='start_time' min="11:00" max="24:00" value=(undefined===reservation ? null : reservation.start_time) required=true)
+            small Ресторна работает с 11:00 до 24:00
+
+        div.form-group
+            label(for='end_time') Сколько часов бронируете:
+            input#end_time.form-control(type='time' name='end_time' min="01:00" max="04:00" value=(undefined===reservation ? null : reservation.end_time))
+            small Бронировать столик можно максимум на 4 часа
 
         button.btn.btn-primary(type='submit') Сохранить
 

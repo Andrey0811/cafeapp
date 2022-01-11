@@ -38,6 +38,7 @@ exports.visitor_detail = function(req, res, next) {
         },
         reservations: function(callback) {
             Reservation.find({ 'id_visitor': req.params.id })
+                .sort('start_time')
                 .exec(callback);
         },
     }, function(err, results) {
@@ -59,7 +60,7 @@ exports.visitor_create_get = function(req, res, next) {
 
 exports.visitor_create_post = [
     validator.body('name', checkErrorNameMsg).trim().isLength({ min: 3 }),
-    validator.body('email', checkErrorEmailMsg).trim().contains('@'),
+    // validator.body('email', checkErrorEmailMsg).trim().contains('@'),
 
     (req, res, next) => {
         const errors = validator.validationResult(req);
@@ -91,9 +92,9 @@ exports.visitor_create_post = [
                     if (result.visitor) {
                         res.redirect(result.visitor.url);
                     } else {
-                        result.save(function (err) {
+                        visitor.save(function (err) {
                             if (err) { return next(err); }
-                            res.redirect(result.visitor.url);
+                            res.redirect(visitor.url);
                         });
                     }
                 })
@@ -102,16 +103,16 @@ exports.visitor_create_post = [
 ];
 
 exports.visitor_delete_get = function(req, res, next) {
-    async.parallel({
+    async.auto({
         visitor: function(callback) {
             Visitor.findById(req.params.id)
                 .exec(callback);
         },
-        reservations: function(result, callback) {
+        reservations: ['visitor', function(result, callback) {
             Reservation.find({ 'id_visitor': req.params.id })
                 .sort('start_time')
                 .exec(callback);
-        },
+        }],
     }, function(err, results) {
         if (err) { return next(err); }
         if (results.visitor == null) {
@@ -127,23 +128,30 @@ exports.visitor_delete_get = function(req, res, next) {
 };
 
 exports.visitor_delete_post = function(req, res, next) {
-    async.parallel({
+    async.auto({
         visitor: function(callback) {
             Visitor.findById(req.params.id)
                 .exec(callback);
         },
-        reservations: function(result, callback) {
+        reservations: ['visitor', function(result, callback) {
             Reservation.find({ 'id_visitor': req.params.id })
                 .sort('start_time')
                 .exec(callback);
-        },
+        }],
     }, function(err, results) {
         if (err) { return next(err); }
-        Reservation.findOneAndRemove({ 'id_visitor': req.params.id });
-        Visitor.findByIdAndRemove(req.body.id, function deleteVisitor(err) {
+        async.parallel({
+            reservation: function(callback) {
+                Reservation.findOneAndRemove({ 'id_visitor': req.body.id })
+                    .exec(callback);
+                },
+            visitor: function(callback) {
+                Visitor.findByIdAndRemove(req.body.id).exec(callback);
+            },
+            }, function (callback, result) {
             if (err) { return next(err); }
             res.redirect('/catalog/visitors');
-        });
+    })
 
     });
 };
@@ -163,7 +171,7 @@ exports.visitor_update_get = function(req, res, next) {
 
 exports.visitor_update_post = [
     validator.body('name', checkErrorNameMsg).trim().isLength({ min: 3 }),
-    validator.body('email', checkErrorEmailMsg).trim().contains('@'),
+    // validator.body('email', checkErrorEmailMsg).trim().contains('@'),
 
     (req, res, next) => {
 

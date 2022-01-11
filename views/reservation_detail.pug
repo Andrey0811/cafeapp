@@ -2,7 +2,7 @@ extends layout
 
 block content
 
-    h1= title + reservation.name
+    h1= title
 
     div(style='margin-left:20px;margin-top:20px')
         h4 Забронировано с #{reservation.start_time_formatted} по #{reservation.end_time_formatted}
@@ -14,10 +14,9 @@ block content
 
         h4 Посетитель:
             a(href=reservation_visitor.url) #{reservation_visitor.name}
-            p Номер телефона: #{reservation_visitor.number}
 
     hr
     p
-        a(href=waiter.url + '/delete') Удалить бронь
+        a(href=reservation.url + '/delete') Удалить бронь
     p
-        a(href=waiter.url + '/update') Изменить бронь
+        a(href=reservation.url + '/update') Изменить бронь

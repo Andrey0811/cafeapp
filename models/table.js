@@ -9,7 +9,6 @@ let TableSchema = new Schema({
     position: {type: Number, min: 1, max: 30, required: true},
     count_peoples: {type: Number, min: 2, max: 10, required: true},
     id_waiter: {type: Schema.Types.ObjectId, ref:'Waiter', required: true},
-    status: {type: String, required: true, enum:['Available', 'Maintenance', 'Reserved'], default:'Available'}
 });
 
 TableSchema.virtual('url').get( function () {

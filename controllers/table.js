@@ -72,7 +72,6 @@ exports.table_create_get = function(req, res, next) {
         res.render(createForm, {
             title: createTableMsg,
             waiter: results.waiter,
-            statusTable: statusTable,
             isCreate: true
         });
     });
@@ -102,7 +101,6 @@ exports.table_create_post = [
                     title: createTableMsg,
                     waiter: results.waiter,
                     table: table,
-                    statusTable: statusTable,
                     errors: errors.array(),
                     isCreate: true
                 });
@@ -169,17 +167,14 @@ exports.table_update_get = function(req, res, next) {
             title: updateTableMsg,
             waiter: results.waiter,
             table: results.table,
-            statusTable: statusTable,
             isCreate: false
         });
     });
 };
 
 exports.table_update_post = [
-    body('position', positionNotEmptyMsg).trim().isLength({ min: 1 }).escape(),
     body('id_waiter', waiterNotEmptyMsg).trim().isLength({ min: 1 }).escape(),
     body('count_peoples', countNotEmptyMsg).trim().isLength({ min: 1 }).escape(),
-    body('status', statusNotEmptyMsg).trim().isLength({ min: 1 }).escape(),
 
     (req, res, next) => {
         const errors = validationResult(req);
@@ -188,7 +183,6 @@ exports.table_update_post = [
             position: req.body.position,
             id_waiter: req.body.id_waiter,
             count_peoples: req.body.count_peoples,
-            status: req.body.status
         });
 
         if (!errors.isEmpty()) {
@@ -202,7 +196,6 @@ exports.table_update_post = [
                     title: updateTableMsg,
                     waiter: results.waiter,
                     table: table,
-                    statusTable: statusTable,
                     errors: errors.array(),
                     isCreate: false
                 });
