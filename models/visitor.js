@@ -7,7 +7,7 @@ let VisitorSchema = new Schema({
     email: {type: String, required: true}
 });
 
-VisitorSchema.virtual('url').get( function () {
+VisitorSchema.virtual('url').get(function () {
     return '/catalog/visitor/' + this._id;
 });
 

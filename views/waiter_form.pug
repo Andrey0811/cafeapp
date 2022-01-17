@@ -6,7 +6,7 @@ block content
     form(method='POST' action='')
         div.form-group
             label(for='name') Имя:
-            input#name.form-control(type='text', placeholder='Иван' name='name' value=(undefined===waiter ? '' : waiter.name))
+            input#name.form-control(type='text', placeholder='Иван' name='name' value=(undefined === waiter ? '' : waiter.name))
 
         if isCreate
             div.form-group

@@ -2,8 +2,8 @@ let Waiter = require('../models/waiter');
 let Table = require('../models/table');
 
 let async = require('async');
-const validator = require('express-validator');
-const {body} = require("express-validator");
+let validator = require('express-validator');
+let {body} = require("express-validator");
 
 const notFoundMsg = 'Официант не найден'
 const listWaiters = 'Список официантов'
@@ -18,28 +18,32 @@ const listForm = 'waiter_list'
 const detailForm = 'waiter_detail'
 const createForm = 'waiter_form'
 
-exports.waiter_list = function(req, res, next) {
+exports.waiter_list = function (req, res, next) {
     Waiter.find()
         .sort('name')
         .exec(function (err, list_waiters) {
-            if (err) { return next(err); }
-            res.render(listForm, { title: listWaiters, waiters_list: list_waiters });
+            if (err) {
+                return next(err);
+            }
+            res.render(listForm, {title: listWaiters, waiters_list: list_waiters});
         });
 };
 
-exports.waiter_detail = function(req, res, next) {
+exports.waiter_detail = function (req, res, next) {
     async.auto({
-        waiter: function(callback) {
+        waiter: function (callback) {
             Waiter.findById(req.params.id)
                 .exec(callback);
         },
-        tables: ['waiter', function(result, callback) {
-            Table.find({ 'id_waiter': req.params.id })
+        tables: ['waiter', function (result, callback) {
+            Table.find({'id_waiter': req.params.id})
                 .sort('position')
                 .exec(callback);
         }],
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err, results) {
+        if (err) {
+            return next(err);
+        }
         if (results.waiter == null) {
             catchError(notFoundMsg, next)
         }
@@ -51,12 +55,12 @@ exports.waiter_detail = function(req, res, next) {
     });
 };
 
-exports.waiter_create_get = function(req, res, next) {
-    res.render(createForm, { title: createWaiterMsg, isCreate: true });
+exports.waiter_create_get = function (req, res) {
+    res.render(createForm, {title: createWaiterMsg, isCreate: true});
 };
 
 exports.waiter_create_post = [
-    validator.body('name', checkErrorMsg).trim().isLength({ min: 3 }),
+    validator.body('name', checkErrorMsg).trim().isLength({min: 3}),
 
     (req, res, next) => {
         const errors = validator.validationResult(req);
@@ -72,9 +76,7 @@ exports.waiter_create_post = [
                 errors: errors.array(),
                 isCreate: true
             });
-            return;
-        }
-        else {
+        } else {
             async.parallel(
                 {
                     waiter: function (callback) {
@@ -85,13 +87,17 @@ exports.waiter_create_post = [
                             .exec(callback);
                     }
                 }, function (err, result) {
-                    if (err) { return next(err); }
+                    if (err) {
+                        return next(err);
+                    }
 
                     if (result.waiter) {
                         res.redirect(result.waiter.url);
                     } else {
                         waiter.save(function (err) {
-                            if (err) { return next(err); }
+                            if (err) {
+                                return next(err);
+                            }
                             res.redirect(waiter.url);
                         });
                     }
@@ -100,19 +106,21 @@ exports.waiter_create_post = [
     }
 ];
 
-exports.waiter_delete_get = function(req, res, next) {
+exports.waiter_delete_get = function (req, res, next) {
     async.auto({
-        waiter: function(callback) {
+        waiter: function (callback) {
             Waiter.findById(req.params.id)
                 .exec(callback);
         },
-        tables: ['waiter', function(result, callback) {
-            Table.find({ 'id_waiter': req.params.id })
+        tables: ['waiter', function (result, callback) {
+            Table.find({'id_waiter': req.params.id})
                 .sort('position')
                 .exec(callback);
         }],
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err, results) {
+        if (err) {
+            return next(err);
+        }
         if (results.waiter == null) {
             res.redirect('/catalog/waiters');
         }
@@ -125,31 +133,32 @@ exports.waiter_delete_get = function(req, res, next) {
     });
 };
 
-exports.waiter_delete_post = function(req, res, next) {
+exports.waiter_delete_post = function (req, res, next) {
     async.auto({
-        waiter: function(callback) {
+        waiter: function (callback) {
             Waiter.findById(req.params.id)
                 .exec(callback);
         },
-        tables: ['waiter', function(result, callback) {
-            Table.find({ 'id_waiter': req.params.id })
+        tables: ['waiter', function (result, callback) {
+            Table.find({'id_waiter': req.params.id})
                 .sort('position')
                 .exec(callback);
         }],
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err, results) {
+        if (err) {
+            return next(err);
+        }
         if (results.tables.length > 0) {
-            //может сообщение вывести о том или овую страницу о том что попутно удаляятся еще и столики
             res.render(deleteForm, {
                 title: deleteWaiterMsg,
                 waiter: results.waiter,
                 tables: results.tables
             });
-            return;
-        }
-        else {
+        } else {
             Waiter.findByIdAndRemove(req.body.id, function deleteWaiter(err) {
-                if (err) { return next(err); }
+                if (err) {
+                    return next(err);
+                }
                 res.redirect('/catalog/waiters');
             });
 
@@ -157,9 +166,11 @@ exports.waiter_delete_post = function(req, res, next) {
     });
 };
 
-exports.waiter_update_get = function(req, res, next) {
-    Waiter.findById(req.params.id, function(err, waiter) {
-        if (err) { return next(err); }
+exports.waiter_update_get = function (req, res, next) {
+    Waiter.findById(req.params.id, function (err, waiter) {
+        if (err) {
+            return next(err);
+        }
         if (waiter == null) {
             catchError(notFoundMsg, next)
         }
@@ -173,7 +184,7 @@ exports.waiter_update_get = function(req, res, next) {
 
 exports.waiter_update_post = [
 
-    body('name', checkErrorMsg).trim().isLength({ min: 3 }).escape(),
+    body('name', checkErrorMsg).trim().isLength({min: 3}).escape(),
 
     (req, res, next) => {
 
@@ -191,12 +202,12 @@ exports.waiter_update_post = [
                 errors: errors.array(),
                 isCreate: true
             });
-            return;
-        }
-        else {
+        } else {
             Waiter.findByIdAndUpdate(req.params.id, waiter, {},
-                function (err,waiter) {
-                    if (err) { return next(err); }
+                function (err, waiter) {
+                    if (err) {
+                        return next(err);
+                    }
                     res.redirect(waiter.url);
                 }
             );

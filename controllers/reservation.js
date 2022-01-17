@@ -4,20 +4,20 @@ let Visitor = require('../models/visitor');
 let Waiter = require('../models/waiter');
 
 let async = require('async');
-const {body, validationResult} = require("express-validator");
-const nodemailer = require('nodemailer')
+let {body, validationResult} = require("express-validator");
+let nodemailer = require('nodemailer')
 
 let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'cafeapp606@gmail.com',
-        pass: 'vtufgfhjkm',
+        user: process.env.GMAIL_FOR_MAIL,
+        pass: process.env.PASSWORD_GMAIL_FOR_MAIL
     },
 })
 
 let createOrUpdate = function (email, obj, isUpdate) {
     if (email)
-         transporter.sendMail({
+        transporter.sendMail({
             from: '"Кофейня" <cafeapp606@gmail.com>',
             to: email,
             subject: 'Бронь на ваше имя в кофейне' + (isUpdate ? ' [Изменения]' : ''),
@@ -26,7 +26,7 @@ let createOrUpdate = function (email, obj, isUpdate) {
                 '<h1>Бронь</h1> ' +
                 '   <h4>Забронировано с ' + obj.date + ' на ' + obj.hours + ' часа ' + obj.minutes + ' минут для ' + obj.count_peoples + '</h4>' +
                 '   <h4>Стол № + ' + obj.table + '</h4>' +
-                '<h4>Посетитель: ' + obj.name+ '</h4>',
+                '<h4>Посетитель: ' + obj.name + '</h4>',
         })
 }
 
@@ -44,22 +44,22 @@ const listForm = 'reservation_list'
 const detailForm = 'reservation_detail'
 const createForm = 'reservation_form'
 
-exports.index = function(req, res, next) {
+exports.index = function (req, res) {
 
     async.parallel({
-        reservation_count: function(callback) {
+        reservation_count: function (callback) {
             Reservation.countDocuments({}, callback);
         },
-        waiter_count: function(callback) {
+        waiter_count: function (callback) {
             Waiter.countDocuments({}, callback);
         },
-        table_count: function(callback) {
+        table_count: function (callback) {
             Table.countDocuments({}, callback);
         },
-        visitor_count: function(callback) {
+        visitor_count: function (callback) {
             Visitor.countDocuments({}, callback);
         }
-    }, function(err, results) {
+    }, function (err, results) {
         res.render('index', {
             title: 'Главная',
             error: err,
@@ -68,11 +68,13 @@ exports.index = function(req, res, next) {
     });
 };
 
-exports.reservation_list = function(req, res, next) {
+exports.reservation_list = function (req, res, next) {
     Reservation.find()
         .sort('start_time')
         .exec(function (err, list_reservations) {
-            if (err) { return next(err); }
+            if (err) {
+                return next(err);
+            }
             res.render(listForm, {
                 title: listReservations,
                 reservation_list: list_reservations
@@ -80,14 +82,14 @@ exports.reservation_list = function(req, res, next) {
         });
 };
 
-exports.reservation_detail = function(req, res, next) {
+exports.reservation_detail = function (req, res, next) {
     async.auto({
-        reservation: function(callback) {
+        reservation: function (callback) {
             Reservation.findById(req.params.id)
                 .exec(callback);
         },
 
-        reservation_table: ['reservation', function(results, callback) {
+        reservation_table: ['reservation', function (results, callback) {
             if (results.reservation !== null)
                 Table.findById(results.reservation.id_table)
                     .exec(callback);
@@ -96,25 +98,27 @@ exports.reservation_detail = function(req, res, next) {
         }],
 
         reservation_visitor: ['reservation', 'reservation_table',
-            function(results, callback) {
+            function (results, callback) {
                 if (results.reservation !== null)
                     Visitor.findById(results.reservation.id_visitor)
                         .exec(callback);
                 else
                     return callback
-        }],
+            }],
 
         table_waiter: ['reservation', 'reservation_table', 'reservation_visitor',
-            function(results, callback) {
+            function (results, callback) {
                 if (results.reservation_table !== null)
                     Waiter.findById(results.reservation_table.id_waiter)
                         .exec(callback, results);
                 else
                     return callback
-        }],
+            }],
 
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err, results) {
+        if (err) {
+            return next(err);
+        }
         if (results.reservation == null) {
             return catchError(notFoundMsg, next)
         }
@@ -128,16 +132,18 @@ exports.reservation_detail = function(req, res, next) {
     });
 };
 
-exports.reservation_create_get = function(req, res, next) {
+exports.reservation_create_get = function (req, res, next) {
     async.parallel({
-        visitor: function(callback) {
+        visitor: function (callback) {
             Visitor.find(callback);
         },
-        table: function(callback) {
+        table: function (callback) {
             Table.find(callback);
         },
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err, results) {
+        if (err) {
+            return next(err);
+        }
         res.render(createForm, {
             title: createReservationMsg,
             visitor: results.visitor,
@@ -147,8 +153,8 @@ exports.reservation_create_get = function(req, res, next) {
 };
 
 exports.reservation_create_post = [
-    body('id_visitor', visitorNotEmptyMsg).trim().isLength({ min: 1 }).escape(),
-    body('id_table', tableNotEmptyMsg).trim().isLength({ min: 1 }).escape(),
+    body('id_visitor', visitorNotEmptyMsg).trim().isLength({min: 1}).escape(),
+    body('id_table', tableNotEmptyMsg).trim().isLength({min: 1}).escape(),
 
     (req, res, next) => {
         const errors = validationResult(req);
@@ -163,14 +169,14 @@ exports.reservation_create_post = [
         async.parallel({
             visitor: function (callback) {
                 Visitor.find(callback);
-                },
+            },
             table: function (callback) {
                 Table.find(callback);
-                },
+            },
             reservation: function (callback) {
                 Reservation.find({'id_table': req.body.id_table})
                     .exec(callback)
-                },
+            },
         }, function (err, results) {
             let myErrors = errors.array()
             if (err) {
@@ -197,7 +203,7 @@ exports.reservation_create_post = [
                     table: results.table,
                     errors: myErrors
                 });
-                return ;
+                return;
             }
 
             let visitorTot;
@@ -213,24 +219,29 @@ exports.reservation_create_post = [
                 date: reservation.start_time, hours: div(reservation.end_time, 1000 * 60 * 60),
                 minutes: div(reservation.end_time, 1000 * 60) - div(reservation.end_time, 1000 * 60 * 60) * 60,
                 count_peoples: reservation.count_peoples,
-                table: results.table.position, name: visitorTot.name}, false)
+                table: results.table.position, name: visitorTot.name
+            }, false)
 
             reservation.save(function (err) {
-                if (err) { return next(err); }
+                if (err) {
+                    return next(err);
+                }
                 res.redirect(reservation.url);
             });
         });
     }
 ];
 
-exports.reservation_delete_get = function(req, res, next) {
+exports.reservation_delete_get = function (req, res, next) {
     async.parallel({
-        reservation: function(callback) {
+        reservation: function (callback) {
             Reservation.findById(req.params.id)
                 .exec(callback);
         },
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err, results) {
+        if (err) {
+            return next(err);
+        }
         if (results.reservation == null) {
             res.redirect('/catalog/reservations');
         }
@@ -241,35 +252,41 @@ exports.reservation_delete_get = function(req, res, next) {
     });
 };
 
-exports.reservation_delete_post = function(req, res, next) {
+exports.reservation_delete_post = function (req, res, next) {
     async.parallel({
-        reservation: function(callback) {
+        reservation: function (callback) {
             Reservation.findById(req.body.id)
                 .exec(callback);
         },
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err) {
+        if (err) {
+            return next(err);
+        }
         Reservation.findByIdAndRemove(req.body.id, function deleteReservation(err) {
-            if (err) { return next(err); }
+            if (err) {
+                return next(err);
+            }
             res.redirect('/catalog/reservations');
         });
     });
 };
 
-exports.reservation_update_get = function(req, res, next) {
+exports.reservation_update_get = function (req, res, next) {
     async.parallel({
-        reservation: function(callback) {
+        reservation: function (callback) {
             Reservation.findById(req.params.id)
                 .exec(callback);
         },
-        visitor: function(callback) {
+        visitor: function (callback) {
             Visitor.find(callback);
         },
-        table: function(callback) {
+        table: function (callback) {
             Table.find(callback);
         },
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err, results) {
+        if (err) {
+            return next(err);
+        }
         if (results.reservation == null) {
             return catchError(notFoundMsg, next)
         }
@@ -283,8 +300,8 @@ exports.reservation_update_get = function(req, res, next) {
 };
 
 exports.reservation_update_post = [
-    body('id_visitor', visitorNotEmptyMsg).trim().isLength({ min: 1 }).escape(),
-    body('id_table', tableNotEmptyMsg).trim().isLength({ min: 1 }).escape(),
+    body('id_visitor', visitorNotEmptyMsg).trim().isLength({min: 1}).escape(),
+    body('id_table', tableNotEmptyMsg).trim().isLength({min: 1}).escape(),
 
     (req, res, next) => {
         const errors = validationResult(req);
@@ -335,7 +352,7 @@ exports.reservation_update_post = [
                     table: results.table,
                     errors: myErrors
                 });
-                return ;
+                return;
             }
 
             let visitorTot;
@@ -351,11 +368,14 @@ exports.reservation_update_post = [
                 date: reservation.start_time, hours: div(reservation.end_time, 1000 * 60 * 60),
                 minutes: div(reservation.end_time, 1000 * 60) - div(reservation.end_time, 1000 * 60 * 60) * 60,
                 count_peoples: reservation.count_peoples,
-                table: results.table.position, name: visitorTot.name}, true)
+                table: results.table.position, name: visitorTot.name
+            }, true)
 
             Reservation.findByIdAndUpdate(req.params.id, reservation, {},
-                function (err,reservation) {
-                    if (err) { return next(err); }
+                function (err, reservation) {
+                    if (err) {
+                        return next(err);
+                    }
                     res.redirect(reservation.url);
                 });
         });
@@ -380,6 +400,6 @@ function getTimeNumberFromString(str) {
     return (60 * parseInt(arr[0]) + parseInt(arr[1])) * 60 * 1000
 }
 
-function div(val, by){
+function div(val, by) {
     return (val - val % by) / by;
 }

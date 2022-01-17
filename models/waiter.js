@@ -1,5 +1,4 @@
 let mongoose = require('mongoose');
-let moment = require('moment');
 
 let Schema = mongoose.Schema;
 
@@ -16,13 +15,32 @@ WaiterSchema.virtual('employment').get(function () {
     let diff = monthDiff(new Date(Date.now()), this.date_employment)
     let year = div(diff, 12)
     let month = diff - year * 12
-    let lastN = div(year, 10)
-    return month + ' месяцев ' + year + (lastN === 1 || lastN === 2 || lastN === 3 ? ' года' : ' лет');
+
+    let lastYearN = year % 10
+    let strYear = ''
+    if (lastYearN === 1 || lastYearN === 2 || lastYearN === 3) {
+        strYear = ' года'
+    } else {
+        strYear = ' лет'
+    }
+
+    let strMonth = ''
+    if (month === 1) {
+        strMonth = ' месяц '
+    }
+    else if (month === 2 || month === 3 || month === 4) {
+        strMonth = ' месяца '
+    }
+    else {
+        strMonth = ' месяцев '
+    }
+
+    return (month + strMonth + year + strYear).toString();
 });
 
 module.exports = mongoose.model('Waiter', WaiterSchema)
 
-function div(val, by){
+function div(val, by) {
     return (val - val % by) / by;
 }
 

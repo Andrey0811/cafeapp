@@ -1,18 +1,18 @@
 extends layout
 
 block content
-  h1= title
-  p Добро пожаловать в кофейню.
+    h1= title
+    p Добро пожаловать в кофейню.
 
-  h1
+    h1
 
-  if error
-    p Ошибка получение динамического контента.
-  else
-    p Кофейня содержит следущее количество записей:
+    if error
+        p Ошибка получение динамического контента.
+    else
+        p Кофейня содержит следущее количество записей:
 
-    ul
-      li #[strong Кол-во броней:] !{data.reservation_count}
-      li #[strong Кол-во официантов:] !{data.waiter_count}
-      li #[strong Кол-во столиков:] !{data.table_count}
-      li #[strong Общее кол-во посетителей:] !{data.visitor_count}
+        ul
+            li #[strong Кол-во броней:] !{data.reservation_count}
+            li #[strong Кол-во официантов:] !{data.waiter_count}
+            li #[strong Кол-во столиков:] !{data.table_count}
+            li #[strong Общее кол-во посетителей:] !{data.visitor_count}

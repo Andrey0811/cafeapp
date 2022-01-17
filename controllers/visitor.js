@@ -2,14 +2,13 @@ let Visitor = require('../models/visitor');
 let Reservation = require("../models/reservation");
 
 let async = require('async');
-const validator = require('express-validator');
+let validator = require('express-validator');
 
 const notFoundMsg = 'Посетитель не найден'
 const listVisitors = 'Список посетителей'
 const visitorMsg = 'Посетитель '
 const createVisitorMsg = 'Добавить посетителя'
 const checkErrorNameMsg = 'Требуется имя посетителя'
-const checkErrorEmailMsg = 'Требуется почта посетителя'
 const deleteVisitorMsg = 'Удаление посетителя'
 const updateVisitorMsg = 'Изменить посетителя'
 
@@ -18,11 +17,13 @@ const listForm = 'visitor_list'
 const detailForm = 'visitor_detail'
 const createForm = 'visitor_form'
 
-exports.visitor_list = function(req, res, next) {
+exports.visitor_list = function (req, res, next) {
     Visitor.find()
         .sort('name')
         .exec(function (err, list_visitors) {
-            if (err) { return next(err); }
+            if (err) {
+                return next(err);
+            }
             res.render(listForm, {
                 title: listVisitors,
                 visitors_list: list_visitors
@@ -30,19 +31,21 @@ exports.visitor_list = function(req, res, next) {
         });
 };
 
-exports.visitor_detail = function(req, res, next) {
+exports.visitor_detail = function (req, res, next) {
     async.parallel({
-        visitor: function(callback) {
+        visitor: function (callback) {
             Visitor.findById(req.params.id)
                 .exec(callback);
         },
-        reservations: function(callback) {
-            Reservation.find({ 'id_visitor': req.params.id })
+        reservations: function (callback) {
+            Reservation.find({'id_visitor': req.params.id})
                 .sort('start_time')
                 .exec(callback);
         },
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err, results) {
+        if (err) {
+            return next(err);
+        }
         if (results.visitor == null) {
             catchError(notFoundMsg, next)
         }
@@ -54,13 +57,12 @@ exports.visitor_detail = function(req, res, next) {
     });
 };
 
-exports.visitor_create_get = function(req, res, next) {
-    res.render(createForm, { title: createVisitorMsg});
+exports.visitor_create_get = function (req, res) {
+    res.render(createForm, {title: createVisitorMsg});
 };
 
 exports.visitor_create_post = [
-    validator.body('name', checkErrorNameMsg).trim().isLength({ min: 3 }),
-    // validator.body('email', checkErrorEmailMsg).trim().contains('@'),
+    validator.body('name', checkErrorNameMsg).trim().isLength({min: 3}),
 
     (req, res, next) => {
         const errors = validator.validationResult(req);
@@ -75,9 +77,7 @@ exports.visitor_create_post = [
                 visitor: visitor,
                 errors: errors.array()
             });
-            return;
-        }
-        else {
+        } else {
             async.parallel(
                 {
                     visitor: function (callback) {
@@ -87,13 +87,17 @@ exports.visitor_create_post = [
                         }).exec(callback);
                     }
                 }, function (err, result) {
-                    if (err) { return next(err); }
+                    if (err) {
+                        return next(err);
+                    }
 
                     if (result.visitor) {
                         res.redirect(result.visitor.url);
                     } else {
                         visitor.save(function (err) {
-                            if (err) { return next(err); }
+                            if (err) {
+                                return next(err);
+                            }
                             res.redirect(visitor.url);
                         });
                     }
@@ -102,19 +106,21 @@ exports.visitor_create_post = [
     }
 ];
 
-exports.visitor_delete_get = function(req, res, next) {
+exports.visitor_delete_get = function (req, res, next) {
     async.auto({
-        visitor: function(callback) {
+        visitor: function (callback) {
             Visitor.findById(req.params.id)
                 .exec(callback);
         },
-        reservations: ['visitor', function(result, callback) {
-            Reservation.find({ 'id_visitor': req.params.id })
+        reservations: ['visitor', function (result, callback) {
+            Reservation.find({'id_visitor': req.params.id})
                 .sort('start_time')
                 .exec(callback);
         }],
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err, results) {
+        if (err) {
+            return next(err);
+        }
         if (results.visitor == null) {
             res.redirect('/catalog/visitors');
         }
@@ -127,38 +133,44 @@ exports.visitor_delete_get = function(req, res, next) {
     });
 };
 
-exports.visitor_delete_post = function(req, res, next) {
+exports.visitor_delete_post = function (req, res, next) {
     async.auto({
-        visitor: function(callback) {
+        visitor: function (callback) {
             Visitor.findById(req.params.id)
                 .exec(callback);
         },
-        reservations: ['visitor', function(result, callback) {
-            Reservation.find({ 'id_visitor': req.params.id })
+        reservations: ['visitor', function (result, callback) {
+            Reservation.find({'id_visitor': req.params.id})
                 .sort('start_time')
                 .exec(callback);
         }],
-    }, function(err, results) {
-        if (err) { return next(err); }
+    }, function (err) {
+        if (err) {
+            return next(err);
+        }
         async.parallel({
-            reservation: function(callback) {
-                Reservation.findOneAndRemove({ 'id_visitor': req.body.id })
+            reservation: function (callback) {
+                Reservation.findOneAndRemove({'id_visitor': req.body.id})
                     .exec(callback);
-                },
-            visitor: function(callback) {
+            },
+            visitor: function (callback) {
                 Visitor.findByIdAndRemove(req.body.id).exec(callback);
             },
-            }, function (callback, result) {
-            if (err) { return next(err); }
+        }, function () {
+            if (err) {
+                return next(err);
+            }
             res.redirect('/catalog/visitors');
-    })
+        })
 
     });
 };
 
-exports.visitor_update_get = function(req, res, next) {
-    Visitor.findById(req.params.id, function(err, visitor) {
-        if (err) { return next(err); }
+exports.visitor_update_get = function (req, res, next) {
+    Visitor.findById(req.params.id, function (err, visitor) {
+        if (err) {
+            return next(err);
+        }
         if (visitor == null) {
             catchError(notFoundMsg, next)
         }
@@ -170,8 +182,7 @@ exports.visitor_update_get = function(req, res, next) {
 };
 
 exports.visitor_update_post = [
-    validator.body('name', checkErrorNameMsg).trim().isLength({ min: 3 }),
-    // validator.body('email', checkErrorEmailMsg).trim().contains('@'),
+    validator.body('name', checkErrorNameMsg).trim().isLength({min: 3}),
 
     (req, res, next) => {
 
@@ -188,12 +199,12 @@ exports.visitor_update_post = [
                 visitor: visitor,
                 errors: errors.array()
             });
-            return;
-        }
-        else {
+        } else {
             Visitor.findByIdAndUpdate(req.params.id, visitor, {},
                 function (err, visitor) {
-                    if (err) { return next(err); }
+                    if (err) {
+                        return next(err);
+                    }
                     res.redirect(visitor.url);
                 }
             );

@@ -1,13 +1,5 @@
 #! /usr/bin/env node
 
-// Get arguments passed on command line
-// let userArgs = process.argv.slice(2);
-/*
-if (!userArgs[0].startsWith('mongodb')) {
-    console.log('ERROR: You need to specify a valid mongodb URL as the first argument');
-    return
-}
-*/
 let async = require('async');
 let Reservation = require('./models/reservation');
 let Table = require('./models/table');
@@ -15,8 +7,11 @@ let Visitor = require('./models/visitor');
 let Waiter = require('./models/waiter')
 
 let mongoose = require('mongoose');
-let postgresURL = 'mongodb+srv://aozhigov:root@cluster0.snrtm.mongodb.net/cafeapp?retryWrites=true&w=majority';//userArgs[0];
-mongoose.connect(postgresURL, {useNewUrlParser: true, useUnifiedTopology: true});
+let postgresURL = process.env.MONGODB_URI;
+mongoose.connect(postgresURL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
 mongoose.Promise = global.Promise;
 mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
 

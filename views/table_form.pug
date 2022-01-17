@@ -7,19 +7,19 @@ block content
         if isCreate
             div.form-group
                 label(for='position') Позиция:
-                input#position.form-control(type='text', placeholder='Позиция столика' name='position' required='true' value=(undefined===table ? '' : table.position) )
+                input#position.form-control(type='text', placeholder='Позиция столика' name='position' required='true' value=(undefined === table ? '' : table.position) )
         div.form-group
             label(for='id_waiter') Официант:
             select#id_waiter.form-control(type='select', placeholder='Выберите официанта>' name='id_waiter' required='true')
                 - waiter.sort(function(a, b) {let textA = a.name.toUpperCase(); let textB = b.name.toUpperCase(); return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;});
                 for val in waiter
                     if table
-                        option(value=val._id selected=(val._id.toString()===table.id_waiter._id.toString() ? 'selected' : false) ) #{val.name}
+                        option(value=val._id selected=(val._id.toString() === table.id_waiter._id.toString() ? 'selected' : false) ) #{val.name}
                     else
                         option(value=val._id) #{val.name}
         div.form-group
             label(for='count_peoples') Вместимость:
-            input#count_peoples.form-control(type='number', placeholder='2' name='count_peoples' min='1' max='10' value=(undefined===table ? '2' : table.count_peoples) required='true')
+            input#count_peoples.form-control(type='number', placeholder='2' name='count_peoples' min='1' max='10' value=(undefined === table ? '2' : table.count_peoples) required='true')
 
         button.btn.btn-primary(type='submit') Сохранить
 
